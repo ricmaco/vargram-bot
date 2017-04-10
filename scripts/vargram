@@ -7,10 +7,10 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-import parse
-from version import VERSION
-from config import config
-from bot import TelegramBot
+from vargram_bot import parse
+from vargram_bot.version import VERSION
+from vargram_bot.config import config
+from vargram_bot.bot import TelegramBot
 
 if __name__ == '__main__':
   if len(sys.argv) > 1 and \

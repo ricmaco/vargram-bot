@@ -12,8 +12,8 @@ from telegram.ext import (
   Job
 )
 
-from version import VERSION 
-from strings import (
+from vargram_bot.version import VERSION
+from vargram_bot.strings import (
   START,
   HELP,
   RECAP,
@@ -57,11 +57,11 @@ class TelegramBot:
           and subscripted mail address and password.
 
     """
-    
+
     def start(bot, update):
       update.message.reply_text(parse_mode='Markdown', text=START)
 
-    def recap(bot, update_or_job):  
+    def recap(bot, update_or_job):
       threads = recap_func()
       _recap = RECAP.format(
         emails = threads.count_mails(),
@@ -99,16 +99,16 @@ class TelegramBot:
             },
             ml_data
           ).start()
-   
+
     def unknown(bot, update):
       update.message.reply_text(parse_mode='Markdown', text=UNKNOWN)
 
     start_handler = CommandHandler('start', start)
     self.dispatcher.add_handler(start_handler)
-   
+
     recap_handler = CommandHandler('recap', recap)
     self.dispatcher.add_handler(recap_handler)
-    
+
     help_handler = CommandHandler('help', help)
     self.dispatcher.add_handler(help_handler)
 
@@ -135,7 +135,7 @@ class TelegramBot:
     Args:
       webhook (str): address for webhook server.
       port (int): port where to start internal server.
-    
+
     """
     if webhook:
       self.updater.start_webhook(port=port, bootstrap_retries=3,
@@ -175,7 +175,7 @@ class EmailThread(threading.Thread):
     serv.starttls()
     serv.ehlo()
     serv.login(self._from, self.smtp_pass)
-    
+
     # send message
     serv.send_message(msg)
 

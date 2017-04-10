@@ -5,7 +5,7 @@ from os import path
 
 import yaml
 
-from exceptions import ConfigException
+from vargram_bot.exceptions import ConfigException
 
 """Config loader module, which act as interface for raw PyYAML.
 

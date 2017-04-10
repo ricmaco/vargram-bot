@@ -97,7 +97,7 @@ ENV/
 /site
 
 # config file
-vargram-bot/config.yml
+scripts/config.yml
 
 # vim swap files
 *.swp

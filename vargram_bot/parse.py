@@ -6,8 +6,8 @@ from os import path
 import requests
 from lxml import html
 
-from model import Mail, Threads
-from exceptions import ParseException
+from vargram_bot.model import Mail, Threads
+from vargram_bot.exceptions import ParseException
 
 def parse_page(page_url):
   try:
@@ -23,7 +23,7 @@ def parse_page(page_url):
           url = path.join(path.dirname(page_url), mail[0].get('href'))
           author = mail[2].text_content().strip()
           mails.append(Mail(subject, author, url))
-    
+
     return mails
   except:
     raise ParseException('Cannot parse <{}>'.format(page_url))
