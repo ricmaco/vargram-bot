@@ -95,3 +95,9 @@ ENV/
 
 # mkdocs documentation
 /site
+
+# config file
+vargram-bot/config.yml
+
+# vim swap files
+*.swp

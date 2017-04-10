@@ -3,3 +3,6 @@
 
 class ParseException(Exception):
   pass
+
+class ConfigException(Exception):
+  pass
