@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import re
 from datetime import timedelta
 
 import yaml, emoji
@@ -19,7 +20,8 @@ from vargram_bot.strings import (
   RECAP,
   AUTHOR,
   MAIL,
-  ML
+  ML,
+  UNKNOWN
 )
 
 class TelegramBot:
@@ -89,13 +91,14 @@ class TelegramBot:
         if len(split_args) < 3:
           update.message.reply_text(parse_mode='Markdown', text=ML)
         else:
+          tmp = ','.join(split_args[2:]).strip()
           EmailThread(
             bot,
             update.message.chat_id,
             {
               'name': split_args[0].strip(),
               'subject': split_args[1].strip(),
-              'text': ','.join(split_args[2:]).strip()
+              'text': re.sub('[\\\\]+\s+', '\n', tmp)
             },
             ml_data
           ).start()

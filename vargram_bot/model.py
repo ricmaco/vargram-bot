@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from vargram_bot.util import capitalize_no_sym as capitalize
+
 from emoji import emojize
 
 class Mail:
@@ -171,7 +173,7 @@ class Threads:
 
     s = ''
     for k, v in reversed(list(self.thread.items())):
-      s += '{} *{}*\n'.format(dash, k.capitalize())
+      s += '{} *{}*\n'.format(dash, capitalize(k))
       for el in reversed(v):
         s += '    [{}]({})\n'.format(el.author, el.url)
     return s

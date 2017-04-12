@@ -39,7 +39,7 @@ HELP = \
 /help mostra questo messaggio di aiuto.
 /recap fornisce un riassunto dell'attività di questo mese in mailing list.
 /ml <nome>, <oggetto>, <testo> invia una mail in mailing list con queste \
-caratteristiche.
+caratteristiche (nel campo <testo> usa \\\\ per andare a capo).
 /author fornisce qualche notizia sull'autore.
 """.strip()
 HELP = __(HELP)
@@ -66,7 +66,7 @@ ML = __(ML)
 
 MAIL = \
 """
-:heavy_check_mark:' L'email _{subject}_ di *{name}* è stata inviata con \
+:heavy_check_mark: L'email _{subject}_ di *{name}* è stata inviata con \
 successo.
 """.strip()
 MAIL = __(MAIL)
