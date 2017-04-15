@@ -175,5 +175,114 @@ class Threads:
     for k, v in reversed(list(self.thread.items())):
       s += '{} *{}*\n'.format(dash, capitalize(k))
       for el in reversed(v):
-        s += '    [{}]({})\n'.format(el.author, el.url)
+        s += f'    [{el.author}]({el.url})\n'
     return s
+
+class Post:
+  """Represents a subreddit post.
+
+  """
+
+  def __init__(self, title, url, is_self, comments=None):
+    """Create a subreddit post, with a title and a url associated.
+
+    Args:
+        title (str): title of post.
+        url (str): url of post.
+        is_self (bool): true if links to comments, false otherwise.
+        comments (str): link to comments in case url is different.
+    
+    """
+    self.__title = title
+    self.__url = url
+    self.__self = is_self
+    if is_self:
+      self.__comments = url
+    else:
+      self.__comments = f'https://www.reddit.com{comments}'
+
+  @property
+  def title(self):
+    """Post title
+
+    """
+    return self.__title
+
+  @property
+  def url(self):
+    """Post url
+
+    """
+    return self.__url
+
+  @property
+  def comments(self):
+    """Post url to comments
+
+    """
+    return self.__comments or None
+
+  def __repr__(self):
+    s = f'{self.title}\n\t{self.url}\n'
+    if self.comments:
+      s += f'\t{self.comments}'
+    return s
+
+  def __str__(self):
+    s = f'[{self.title}]({self.url})'
+    if self.comments:
+      s += f' ([comments]({self.comments}))'
+    return s
+
+class Subreddit:
+  """Represents a subreddit ordered by top posts.
+
+  Attributes:
+      subreddit (list): a list of posts from subreddit.
+
+  """
+
+  def __init__(self, name):
+    """Create an empty subreddit
+
+    Args:
+        name (str): name of subreddit.
+
+    """
+    self.__name = name
+    self.subreddit = []
+
+  @property
+  def name(self):
+    """Subreddit name.
+
+    """
+    return self.__name
+
+  def append(self, post):
+    """Add a post to the subreddit representation.
+
+    Args:
+        post (Post): post to add.
+
+    """
+    self.subreddit.append(post)
+
+  def __repr__(self):
+    return repr(self.subreddit)
+
+  def __str__(self):
+    return '\n'.join([repr(i) for i in self.subreddit])
+
+  def markdown(self):
+    try:
+      from emoji import emojize
+      dash = emojize(':point_right:', use_aliases=True)
+    except ImportError:
+      dash = '-'
+
+    return '\n'.join([f'{dash} {el}' for el in self.subreddit])
+
+
+
+  

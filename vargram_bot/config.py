@@ -20,10 +20,10 @@ Attributes:
 
 config = {
   'token': '',
-  'group-id': -1001113909424,
   'mailman-url': 'http://ml.linuxvar.it/pipermail/talking/$Y-$M/date.html',
-  'webhook-url': False,
-  'webhook-port': 8888,
+  'webhook': None,
+  'webhook-port': None,
+  'heroku-url': 'https://vargram-bot.herokuapp.com/',
   'smtp-address': 'smtp.gmail.com',
   'smtp-port': 587,
   'smtp-user': '',

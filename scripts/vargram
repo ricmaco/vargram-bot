@@ -7,7 +7,6 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-from vargram_bot import parse
 from vargram_bot.version import VERSION
 from vargram_bot.config import config
 from vargram_bot.bot import TelegramBot
@@ -23,23 +22,18 @@ if __name__ == '__main__':
   # function to wrap library call for parsing page
   def parsing():
     return parse.parse_page(
-        config['mailman-url'].replace('$Y', '2017').replace('$M', 'April')
     )
 
   bot.initialize(
-      parsing,
-      {
-        'name': config['group-name'],
-        'id': config['group-id']
-      },
-      {
-        'from': config['smtp-user'],
-        'to': config['smtp-to'],
-        'password': config['smtp-pass'],
-        'server': config['smtp-address'],
-        'port': config['smtp-port']
-      }
+    config['mailman-url'].replace('$Y', '2017').replace('$M', 'April'),
+    {
+      'from': config['smtp-user'],
+      'to': config['smtp-to'],
+      'password': config['smtp-pass'],
+      'server': config['smtp-address'],
+      'port': config['smtp-port']
+    }
   )
 
   logging.info('Starting bot!')
-  bot.start(config['webhook-url'], config['webhook-port'])
+  bot.start(config['webhook'], config['webhook-port'], config['heroku-url'])

@@ -101,3 +101,6 @@ scripts/config.yml
 
 # vim swap files
 *.swp
+
+# test script
+test.sh

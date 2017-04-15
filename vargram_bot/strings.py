@@ -37,10 +37,12 @@ HELP = \
 """
 /start mostra il messaggio di benvenuto.
 /help mostra questo messaggio di aiuto.
+/author fornisce qualche notizia sull'autore.
 /recap fornisce un riassunto dell'attività di questo mese in mailing list.
 /ml <nome>, <oggetto>, <testo> invia una mail in mailing list con queste \
 caratteristiche (nel campo <testo> usa \\\\ per andare a capo).
-/author fornisce qualche notizia sull'autore.
+/rlinux mostra le ultime dieci notizie da \
+[/r/linux](https://www.reddit.com/r/linux).
 """.strip()
 HELP = __(HELP)
 
@@ -70,3 +72,11 @@ MAIL = \
 successo.
 """.strip()
 MAIL = __(MAIL)
+
+REDDIT = \
+"""
+:penguin: Ecco gli ultimi post di [/r/{name}](https://www.reddit.com/r/{name}):.
+
+{subreddit}
+""".strip()
+REDDIT = __(REDDIT)
