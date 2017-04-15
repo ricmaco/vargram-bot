@@ -9,7 +9,8 @@ def capitalize_no_sym(text):
   except:
     start = 0
 
-  return '{} {}'.format(
+  return '{}{}{}'.format(
     text[:start].strip(),
+    '' if start == 0 else ' ',
     text[start:].strip().capitalize()
   )

@@ -4,5 +4,8 @@
 class ParseException(Exception):
   pass
 
+class InternetException(Exception):
+  pass
+
 class ConfigException(Exception):
   pass

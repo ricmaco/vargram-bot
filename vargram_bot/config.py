@@ -19,15 +19,18 @@ Attributes:
 """
 
 config = {
-  'token': '',
-  'group-id': -1001113909424,
+  'token': None,
   'mailman-url': 'http://ml.linuxvar.it/pipermail/talking/$Y-$M/date.html',
-  'webhook-url': False,
-  'webhook-port': 8888,
+  'webhook': False,
+  'webhook-domain': 'https://example.com/',
+  'webhook-path': 'vargram',
+  'webhook-port': 8443,
+  'webhook-key': '/etc/ssl/private.key',
+  'webhook-cert': '/etc/ssl/cert.pem',
   'smtp-address': 'smtp.gmail.com',
   'smtp-port': 587,
-  'smtp-user': '',
-  'smtp-pass': '',
+  'smtp-user': None,
+  'smtp-pass': None,
   'smtp-to': 'talking@ml.linuxvar.it'
 }
 

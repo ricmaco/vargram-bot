@@ -1,13 +1,14 @@
 # botfather token
 token: <bot token as give by BotFather>
-# group of people who can interact with bot
-group-name: <name of group of admins>
-group-id: <group id where to send updates>
 # mailman url to parse for getting email info
 mailman-url: http://ml.linuxvar.it/pipermail/talking/$Y-$M/date.html
 # wheter to use a webserver or polling
-webhook-url: False
-webhook-port: 8888
+webhook: False
+webhook-domain: https://example.com/
+webhook-path: vargram
+webhook-port: 8443
+webhook-key: /etc/ssl/private.key
+webhook-cert: /etc/ssl/cert.pem
 # smtp parameters
 smtp-address: smtp.gmail.com
 smtp-port: 587

@@ -1,27 +1,38 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import re
+import os, re, logging
 from datetime import timedelta
+from urllib import parse
 
 import yaml, emoji
 from telegram.ext import (
   Updater,
   CommandHandler,
   MessageHandler,
-  Filters,
-  Job
+  Filters
+)
+from telegram.error import (
+  TelegramError,
+  Unauthorized,
+  BadRequest, 
+  TimedOut,
+  ChatMigrated,
+  NetworkError
 )
 
 from vargram_bot.version import VERSION
 from vargram_bot.strings import (
   START,
   HELP,
-  RECAP,
   AUTHOR,
-  MAIL,
   ML,
   UNKNOWN
+)
+from vargram_bot.workers import (
+  MLWorker,
+  EmailWorker,
+  RedditWorker
 )
 
 class TelegramBot:
@@ -29,10 +40,10 @@ class TelegramBot:
 
   The bot is characterized by a token, which acts as access control.
 
-  Attributes
-    updater (telegram.update.Update): telegram bot updater.
-    dispatcher (telegram.dispatcher.Dispatcher): telegram bot dispatcher.
-    job_queue (telegram.ext.JobQueue): telegram bot job queue.
+  Attributes:
+      token (str): access token by BotFather.
+      updater (telegram.update.Update): telegram bot updater.
+      dispatcher (telegram.dispatcher.Dispatcher): telegram bot dispatcher.
 
   """
 
@@ -43,11 +54,11 @@ class TelegramBot:
       token (str): token give by BotFather.
 
     """
+    self.token = token
     self.updater = Updater(token)
     self.dispatcher = self.updater.dispatcher
-    self.job_queue = self.updater.job_queue
 
-  def initialize(self, recap_func, group, ml_data):
+  def initialize(self, recap_url, ml_data):
     """Initializes bot with all functions to answer user commands.
 
     Args:
@@ -63,48 +74,54 @@ class TelegramBot:
     def start(bot, update):
       update.message.reply_text(parse_mode='Markdown', text=START)
 
-    def recap(bot, update_or_job):
-      threads = recap_func()
-      _recap = RECAP.format(
-        emails = threads.count_mails(),
-        threads = threads.count_threads(),
-        recap = threads.markdown()
-      )
-
-      if not isinstance(update_or_job, Job):
-        update_or_job.message.reply_text(parse_mode='Markdown', text=_recap)
-      else:
-        bot.sendMessage(chat_id=group_id, text=_recap, parse_mode='Markdown')
+    def recap(bot, update):
+      MLWorker(
+        bot,
+        update,
+        recap_url
+      ).start()
 
     def help(bot, update):
-      update.message.reply_text(parse_mode='Markdown', text=HELP)
+      update.message.reply_text(parse_mode='Markdown',
+          disable_web_page_preview=True, text=HELP)
 
     def author(bot, update):
       _author = AUTHOR.format(version=VERSION)
       update.message.reply_text(parse_mode='Markdown', text=_author)
 
     def ml(bot, update, args):
-      if len(args) < 3:
+      split_args = ' '.join(args).split(',')
+      if len(split_args) < 3:
         update.message.reply_text(parse_mode='Markdown', text=ML)
       else:
-        split_args = ' '.join(args).split(',')
-        if len(split_args) < 3:
-          update.message.reply_text(parse_mode='Markdown', text=ML)
-        else:
-          tmp = ','.join(split_args[2:]).strip()
-          EmailThread(
-            bot,
-            update.message.chat_id,
-            {
-              'name': split_args[0].strip(),
-              'subject': split_args[1].strip(),
-              'text': re.sub('[\\\\]+\s+', '\n', tmp)
-            },
-            ml_data
-          ).start()
+        tmp = ','.join(split_args[2:]).strip()
+        EmailWorker(
+          bot,
+          update,
+          {
+            'name': split_args[0].strip(),
+            'subject': split_args[1].strip(),
+            'text': re.sub('[\\\\]+\s+', '\n', tmp)
+          },
+          ml_data
+        ).start()
+
+    def rlinux(bot, update):
+      RedditWorker(
+        bot,
+        update,
+        'linux'
+      ).start()
 
     def unknown(bot, update):
       update.message.reply_text(parse_mode='Markdown', text=UNKNOWN)
+
+    def error(bot, update, error):
+      try:
+        raise error
+      except (Unauthorized, BadRequest, TimedOut, NetworkError, ChatMigrated,
+          TelegramError) as e:
+        logging.error(str(e))
 
     start_handler = CommandHandler('start', start)
     self.dispatcher.add_handler(start_handler)
@@ -121,14 +138,16 @@ class TelegramBot:
     ml_handler = CommandHandler('ml', ml, pass_args=True)
     self.dispatcher.add_handler(ml_handler)
 
+    rlinux_handler = CommandHandler('rlinux', rlinux)
+    self.dispatcher.add_handler(rlinux_handler)
+
     unknown_handler = MessageHandler(Filters.command, unknown)
     self.dispatcher.add_handler(unknown_handler)
 
-    # queue job every monday
-    job = Job(recap, timedelta(days=1), repeat=True, days=(0,))
-    self.job_queue.put(job)
+    self.dispatcher.add_error_handler(error)
 
-  def start(self, webhook=False, port=8888):
+  def start(self, webhook=False, domain=None, path=None, port=None, key=None,
+      cert=None):
     """Start bot with either polling or webhook.
 
     First start bot with either polling method, for testing, or with a http
@@ -136,52 +155,32 @@ class TelegramBot:
     Then put updater into idle, waiting for stop signal.
 
     Args:
-      webhook (str): address for webhook server.
+      webhook (bool): wheter to use a webhook server.
+      domain (str): domain of webhook server.
+      path (str): path of webhook server.
       port (int): port where to start internal server.
+      key (str): path to ssl private key.
+      cert (str): path to ssl cert.pem certificate.
 
     """
     if webhook:
-      self.updater.start_webhook(port=port, bootstrap_retries=3,
-          webhook_url=webhook)
+      # destructure domain to add port, to build url
+      des_domain = parse.urlparse(domain)
+      new_netloc = '{}:{}'.format(des_domain.netloc, port)
+      domain = parse.urlunparse(des_domain._replace(netloc=new_netloc))
+      url = parse.urljoin(domain, path)
+
+      self.updater.start_webhook(
+        listen = '0.0.0.0',
+        port = port,
+        url_path = path,
+        bootstrap_retries = 3,
+        key = key,
+        cert = cert,
+        webhook_url = url
+      )
+      logging.info(f'Started webhook on {url}')
     else:
       self.updater.start_polling()
+      logging.info('Started polling')
     self.updater.idle()
-
-import threading, smtplib
-from email.mime.text import MIMEText
-
-class EmailThread(threading.Thread):
-
-  def __init__(self, bot, chat_id, email_data, ml_data):
-    threading.Thread.__init__(self)
-    self.bot = bot
-    self.chat_id = chat_id
-    self._from = ml_data['from']
-    self.to = ml_data['to']
-    self.smtp_serv = ml_data['server']
-    self.smtp_port = ml_data['port']
-    self.smtp_pass = ml_data['password']
-    self.name = email_data['name']
-    self.subject = email_data['subject']
-    self.text = email_data['text']
-
-  def run(self):
-    # compose message
-    msg = MIMEText(self.text)
-    msg['Subject'] = '[Gruppo Telegram] {}'.format(self.subject)
-    msg['From'] = '{} <{}>'.format(self.name, self._from)
-    msg['To'] = self.to
-
-    # authenticate to smtp
-    serv = smtplib.SMTP(self.smtp_serv, self.smtp_port)
-    serv.ehlo()
-    serv.starttls()
-    serv.ehlo()
-    serv.login(self._from, self.smtp_pass)
-
-    # send message
-    serv.send_message(msg)
-
-    # write confirmation to bot
-    self.bot.sendMessage(chat_id=self.chat_id, parse_mode='Markdown',
-        text= MAIL.format(subject=self.subject, name=self.name))
