@@ -34,6 +34,13 @@ $ python3 setup.py install
 $ vargram
 ```
 
+5. Optionally you can enable ``vargram`` to start at boot or start it using
+   Systemd commands.
+```
+# systemctl enable vargram
+# systemctl start vargram
+```
+
 ## Tip and tricks
 The default example config looks like this.
 ```yaml

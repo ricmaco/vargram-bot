@@ -25,5 +25,8 @@ setup(
     zip_safe = False,
     scripts = [
       'scripts/vargram'
+    ],
+    data_files = [
+      ('/etc/systemd/system', ['scripts/vargram.service'])
     ]
 )
