@@ -20,7 +20,8 @@ setup(
       'lxml',
       'PyYAML',
       'requests',
-      'emoji'
+      'emoji',
+      'feedparser'
     ],
     zip_safe = False,
     scripts = [

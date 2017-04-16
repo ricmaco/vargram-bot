@@ -10,6 +10,7 @@ There are some common available dependencies to download (which are automaticall
 - `PyYAML >= 3.12`
 - `requests >= 2.13.0`
 - `emoji >= 0.4.5`
+- `feedparser >= 5.2.1`
 
 ## Installation
 To install the software execute the following procedure.
@@ -19,10 +20,12 @@ To install the software execute the following procedure.
 $ git clone https://github.com/imko92/vargram-bot.git
 $ cd vargram-bot
 ```
+
 2. Install software with setup utility.
 ```shell
 $ python3 setup.py install
 ```
+
 3. Copy configuration to `/etc/vargram.yml` and edit it.
 ```shell
 # cp docs/config.yml /etc/vargram.yml

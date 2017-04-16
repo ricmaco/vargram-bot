@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from vargram_bot.util import capitalize_no_sym as capitalize
+import html, time
 
-from emoji import emojize
+from vargram_bot.util import capitalize_no_sym as capitalize
 
 class Mail:
   """Class representing an email.
@@ -75,9 +75,8 @@ class Mail:
         ', '.join((self.subject, self.author, self.url)))
 
   def __str__(self):
-    return 'Subject: {}\nAuthor: {}\nURL: {}'.format(self.subject, self.author,
-        self.url)
-
+    return f'Subject: {self.subject}\n\tAuthor: {self.author}\n\tURL: \
+        {self.url}'
 
 class Threads:
   """Represents a set of emails partitioned by subject.
@@ -156,27 +155,30 @@ class Threads:
       s += '\n'
     return s
 
-  def markdown(self):
-    """Like ``str()`` but with added Markdown formatting and (if available)
-    emojis.
+  def html(self):
+      """Like ``str()`` but with added HTML formatting and (if available)
+      emojis.
 
-    Returns:
-        A string representing this ``Threads``, formatted in Markdown (and
-        optionally emojis).
+      Returns:
+          A string representing this ``Threads``, formatted in HTML (and
+          optionally emojis).
 
-    """
-    try:
-      from emoji import emojize
-      dash = emojize(':point_right:', use_aliases=True)
-    except ImportError:
-      dash = '-'
+      """
+      try:
+        from emoji import emojize
+        dash = emojize(':point_right:', use_aliases=True)
+      except ImportError:
+        dash = '-'
 
-    s = ''
-    for k, v in reversed(list(self.thread.items())):
-      s += '{} *{}*\n'.format(dash, capitalize(k))
-      for el in reversed(v):
-        s += f'    [{el.author}]({el.url})\n'
-    return s
+      s = ''
+      for k, v in reversed(list(self.thread.items())):
+        s += '{} <b>{}</b>\n'.format(dash, capitalize(k))
+        for el in reversed(v):
+          s += '    <a href="{}">{}</a>\n'.format(
+            el.url,
+            html.escape(el.author)
+          )
+      return s
 
 class Post:
   """Represents a subreddit post.
@@ -197,9 +199,9 @@ class Post:
     self.__url = url
     self.__self = is_self
     if is_self:
-      self.__comments = url
+      self.__comments = None
     else:
-      self.__comments = f'https://www.reddit.com{comments}'
+      self.__comments = url
 
   @property
   def title(self):
@@ -223,15 +225,20 @@ class Post:
     return self.__comments or None
 
   def __repr__(self):
-    s = f'{self.title}\n\t{self.url}\n'
-    if self.comments:
-      s += f'\t{self.comments}'
-    return s
+    return '{}({})'.format(self.__class__.__name__,
+        ', '.join((self.title, self.url, self.comments)))
 
   def __str__(self):
-    s = f'[{self.title}]({self.url})'
+    return f'Title: {self.title}\n\tURL: {self.url}\n\tComments: \
+        {self.comments}'
+
+  def html(self):
+    s = '<a href="{}">{}</a>'.format(
+      self.url,
+      html.escape(self.title)
+    )
     if self.comments:
-      s += f' ([comments]({self.comments}))'
+      s += f' (<a href="{self.comments}">comments</a>)'
     return s
 
 class Subreddit:
@@ -272,17 +279,129 @@ class Subreddit:
     return repr(self.subreddit)
 
   def __str__(self):
-    return '\n'.join([repr(i) for i in self.subreddit])
+    return '\n'.join([i for i in self.subreddit])
 
-  def markdown(self):
+  def html(self):
     try:
       from emoji import emojize
       dash = emojize(':point_right:', use_aliases=True)
     except ImportError:
       dash = '-'
 
-    return '\n'.join([f'{dash} {el}' for el in self.subreddit])
+    return '\n'.join(['{} {}'.format(dash, el.html()) \
+        for el in self.subreddit])
 
+class Article:
+  """Represent an article from a RSS feed.
 
+  """
 
+  def __init__(self, title, description, url, date):
+    """Create a RSS feed article
+
+    Args:
+      title (str): title of article.
+      description (str): description of article.
+      url (str): url of article.
+      date (time.struct_time): date of publication of article.
+
+    """
+    self.__title = title
+    self.__description = description
+    self.__url = url
+    self.__date = date
+
+  @property
+  def title(self):
+    """Title of article.
+
+    """
+    return self.__title
+
+  @property
+  def description(self):
+    """Description of article.
+
+    """
+    return self.__description
+
+  @property
+  def url(self):
+    """URL of article.
+
+    """
+    return self.__url
+
+  @property
+  def date(self):
+    """Date of publication of article.
+
+    """
+    return self.__date
+
+  def __repr__(self):
+    return '{}({})'.format(self.__class__.__name__,
+        ', '.join((self.title, self.description, self.url,
+          time.strftime('%d/%m/%y %H:%M:%S', self.date))))
+
+  def __str__(self):
+    return 'Title: {}\n\tDescription: {}\n\tURL: {}\n\tDate: {}'.format(
+          self.url,
+          self.title,
+          self.description,
+          time.strftime('%d/%m/%y %H:%M:%S', self.date)
+        )
+    
+
+  def html(self):
+    return '<a href="{}">{}</a>\n    ⌚ {}'.format(
+          self.url,
+          self.title,
+          time.strftime('%d/%m/%y %H:%M', self.date),
+        )
+    
+class Feed:
+  """Represent a RSS Feed
+
+  Attributes:
+      feed (list): list of RSS articles.
   
+  """
+
+  def __init__(self, title):
+    """Create an empty feed.
+
+    """
+    self.__title = title
+    self.feed = []
+  
+  @property
+  def title(self):
+    """Feed title.
+
+    """
+    return self.__title
+
+  def append(self, article):
+    """Add ``article`` to feed.
+
+    Args:
+      article (Article): article to add.
+
+    """
+    self.feed.append(article)
+
+  def __repr__(self):
+    return repr(self.feed)
+
+  def __str__(self):
+    return '\n'.join([i for i in self.feed])
+
+  def html(self):
+    try:
+      from emoji import emojize
+      dash = emojize(':point_right:', use_aliases=True)
+    except ImportError:
+      dash = '-'
+
+    return '\n'.join(['{} {}'.format(dash, el.html()) for el in self.feed])

@@ -25,8 +25,8 @@ START = __(START)
 
 RECAP = \
 """
-:penguin: Questo mese abbiamo inviato *{emails} messaggi* all'interno di \
-*{threads} thread*.
+:penguin: Questo mese abbiamo inviato <b>{emails} messaggi</b> all'interno di \
+<b>{threads} thread</b>.
 
 Abbiamo parlato di:
 {recap}
@@ -41,8 +41,12 @@ HELP = \
 /recap fornisce un riassunto dell'attività di questo mese in mailing list.
 /ml <nome>, <oggetto>, <testo> invia una mail in mailing list con queste \
 caratteristiche (nel campo <testo> usa \\\\ per andare a capo).
-/rlinux mostra le ultime dieci notizie da \
+/rlinux mostra gli ultimi dieci post da \
 [/r/linux](https://www.reddit.com/r/linux).
+/runixporn mostra gli ultimi dieci post da \
+[/r/unixporn](https://www.reddit.com/r/unixporn).
+/phoronix mostra gli ultimi dieci articoli di \
+[Phoronix](http://www.phoronix.com).
 """.strip()
 HELP = __(HELP)
 
@@ -75,8 +79,17 @@ MAIL = __(MAIL)
 
 REDDIT = \
 """
-:penguin: Ecco gli ultimi post di [/r/{name}](https://www.reddit.com/r/{name}):.
+:penguin: Ecco gli ultimi post di \
+<a href="https://www.reddit.com/r/{name}">/r/{name}</a>:
 
 {subreddit}
 """.strip()
 REDDIT = __(REDDIT)
+
+FEED = \
+"""
+:penguin: Ecco gli ultimi articoli di <a href="{url}">{name}</a>:
+
+{feed}
+""".strip()
+FEED = __(FEED)

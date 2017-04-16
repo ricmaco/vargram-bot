@@ -32,7 +32,8 @@ from vargram_bot.strings import (
 from vargram_bot.workers import (
   MLWorker,
   EmailWorker,
-  RedditWorker
+  RedditWorker,
+  RSSWorker
 )
 
 class TelegramBot:
@@ -113,6 +114,20 @@ class TelegramBot:
         'linux'
       ).start()
 
+    def runixporn(bot, update):
+      RedditWorker(
+        bot,
+        update,
+        'unixporn'
+      ).start()
+
+    def phoronix(bot, update):
+      RSSWorker(
+        bot,
+        update,
+        'http://www.phoronix.com/rss.php',
+      ).start()
+
     def unknown(bot, update):
       update.message.reply_text(parse_mode='Markdown', text=UNKNOWN)
 
@@ -140,6 +155,12 @@ class TelegramBot:
 
     rlinux_handler = CommandHandler('rlinux', rlinux)
     self.dispatcher.add_handler(rlinux_handler)
+
+    runixporn_handler = CommandHandler('runixporn', runixporn)
+    self.dispatcher.add_handler(runixporn_handler)
+
+    phoronix_handler = CommandHandler('phoronix', phoronix)
+    self.dispatcher.add_handler(phoronix_handler)
 
     unknown_handler = MessageHandler(Filters.command, unknown)
     self.dispatcher.add_handler(unknown_handler)

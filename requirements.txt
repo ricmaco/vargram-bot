@@ -1,6 +1,8 @@
 appdirs==1.4.3
 certifi==2017.1.23
+cssselect==1.0.1
 emoji==0.4.5
+feedparser==5.2.1
 future==0.16.0
 lxml==3.7.3
 packaging==16.8
@@ -10,3 +12,4 @@ PyYAML==3.12
 requests==2.13.0
 six==1.10.0
 urllib3==1.20
+vargram-bot==0.5

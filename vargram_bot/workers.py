@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import threading, smtplib
+import threading, smtplib, html
 from os import path
 from email.mime.text import MIMEText
 
-import requests
+import requests, feedparser
 from lxml import html
 
 from vargram_bot.version import VERSION
@@ -13,7 +13,9 @@ from vargram_bot.model import (
   Mail,
   Threads,
   Post,
-  Subreddit
+  Subreddit,
+  Article,
+  Feed
 )
 from vargram_bot.exceptions import (
   ParseException,
@@ -22,7 +24,8 @@ from vargram_bot.exceptions import (
 from vargram_bot.strings import (
   RECAP,
   MAIL,
-  REDDIT
+  REDDIT,
+  FEED
 )
 
 class MLWorker(threading.Thread):
@@ -33,9 +36,9 @@ class MLWorker(threading.Thread):
     self.update = update
     self.url = url
 
-  def __parse_page(self, page_url):
+  def __parse_page(self, url):
     try:
-      page = requests.get(page_url)
+      page = requests.get(url)
       tree = html.fromstring(page.content)
 
       mails = Threads()
@@ -44,22 +47,22 @@ class MLWorker(threading.Thread):
         if x == 1:
           for mail in ul.iter('li'):
             subject = mail[0].text_content().strip()
-            url = path.join(path.dirname(page_url), mail[0].get('href'))
+            url = path.join(path.dirname(url), mail[0].get('href'))
             author = mail[2].text_content().strip()
             mails.append(Mail(subject, author, url))
 
       return mails
     except:
-      raise ParseException(f'Cannot parse <{page_url}>')
+      raise ParseException(f'Cannot parse <{url}>')
 
   def run(self):
     threads = self.__parse_page(self.url)
     _recap = RECAP.format(
       emails = threads.count_mails(),
       threads = threads.count_threads(),
-      recap = threads.markdown()
+      recap = threads.html()
     )
-    self.update.message.reply_text(parse_mode='Markdown',
+    self.update.message.reply_text(parse_mode='HTML',
         disable_web_page_preview=True, text=_recap)
 
 
@@ -139,9 +142,43 @@ class RedditWorker(threading.Thread):
 
     _reddit = REDDIT.format(
       name=subreddit.name,
-      subreddit=subreddit.markdown()
+      subreddit=subreddit.html()
     )
-    self.update.message.reply_text(parse_mode='Markdown',
+    self.update.message.reply_text(parse_mode='HTML',
         disable_web_page_preview=True,
         text=_reddit)
 
+class RSSWorker(threading.Thread):
+
+  def __init__(self, bot, update, url):
+    threading.Thread.__init__(self)
+    self.bot = bot
+    self.update = update
+    self.url = url
+
+  def __parse_rss(self, url):
+    try:
+      parsed = feedparser.parse(url)
+      feed = Feed(parsed['feed']['title'])
+      for el in parsed['items'][:10]:
+        feed.append(Article(
+          el['title'],
+          el['description'],
+          el['link'],
+          el['published_parsed']
+        ))
+      return feed
+    except:
+      raise ParseException(f'Cannot parse feed at <{url}>')
+    
+  def run(self):
+    feed = self.__parse_rss(self.url)
+
+    _feed_text = FEED.format(
+      name = feed.title,
+      url = self.url,
+      feed = feed.html()
+    )
+    self.update.message.reply_text(parse_mode='HTML',
+        disable_web_page_preview=True,
+        text=_feed_text)
